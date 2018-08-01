@@ -3,7 +3,9 @@ package com.asrmicro.os.easydpf
 import android.app.Activity
 import android.os.Bundle
 import android.os.Handler
+import android.util.Log
 import android.view.KeyEvent
+import android.view.KeyEvent.KEYCODE_DPAD_LEFT
 import android.view.KeyEvent.KEYCODE_DPAD_RIGHT
 import android.view.View
 //import com.asrmicro.os.easydpf.R.id.fullscreen_content_controls
@@ -13,12 +15,16 @@ import com.bumptech.glide.Glide
 import com.bumptech.glide.load.resource.drawable.GlideDrawable
 import com.bumptech.glide.request.animation.GlideAnimation
 import com.bumptech.glide.request.target.SimpleTarget
+import java.util.*
 
 /**
  * An example full-screen activity that shows and hides the system UI (i.e.
  * status bar and navigation/system bar) with user interaction.
  */
 class FullscreenActivity : Activity() {
+    private var mPicIndex = 0
+    private var mBackgroundTimer: Timer? = null
+
     private val mHideHandler = Handler()
     private val mHidePart2Runnable = Runnable {
         // Delayed removal of status and navigation bar
@@ -36,12 +42,8 @@ class FullscreenActivity : Activity() {
     }
 
     override fun onKeyUp(keyCode: Int, event: KeyEvent?): Boolean {
-        if (keyCode == KEYCODE_DPAD_RIGHT)
-            Glide.with(this).load(R.color.black_overlay)
-                    .error(R.color.black_overlay)
-                    //.centerCrop()
-                    .crossFade()
-                    .placeholder(R.color.black_overlay).into(fullscreen_content);
+        if (keyCode == KEYCODE_DPAD_RIGHT ) updateBackground(true)
+        if (keyCode == KEYCODE_DPAD_LEFT ) updateBackground(false)
 
         return super.onKeyUp(keyCode, event)
     }
@@ -90,12 +92,13 @@ class FullscreenActivity : Activity() {
             fullscreen_content.requestFocus()},
                 1000)
 */
-        Glide.with(this).load("http://f.hiphotos.baidu.com/image/pic/item/63d0f703918fa0ece5f167da2a9759ee3d6ddb37.jpg")
+        Glide.with(this).load(pic_list[mPicIndex])
                 .error(R.color.black_overlay)
                 //.centerCrop()
                 .crossFade()
                 .placeholder(R.color.black_overlay).into(fullscreen_content);
 
+        startBackgroundTimer()
     }
 
     private fun hide() {
@@ -113,6 +116,43 @@ class FullscreenActivity : Activity() {
     private fun delayedHide(delayMillis: Int) {
         mHideHandler.removeCallbacks(mHideRunnable)
         mHideHandler.postDelayed(mHideRunnable, delayMillis.toLong())
+    }
+
+    private fun startBackgroundTimer() {
+        mBackgroundTimer?.cancel()
+        mBackgroundTimer = Timer()
+        mBackgroundTimer?.schedule(UpdateBackgroundTask(), BACKGROUND_UPDATE_DELAY.toLong())
+    }
+
+    private inner class UpdateBackgroundTask : TimerTask() {
+
+        override fun run() {
+            mHideHandler.post { updateBackground(true) }
+        }
+    }
+
+    @Synchronized private fun updateBackground(forward: Boolean) {
+        if (forward) {
+            mPicIndex = (mPicIndex + 1) % pic_list.size
+        }
+        else {
+            if (mPicIndex < 1) mPicIndex = pic_list.size - 1
+            else mPicIndex--
+        }
+
+        Glide.with(this)
+                .load(pic_list[mPicIndex])
+                .error(R.color.black_overlay)
+                //.centerCrop()
+                .crossFade()
+                .placeholder(R.color.black_overlay).into(fullscreen_content);
+        startBackgroundTimer()
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+        Log.d(TAG, "onDestroy: " + mBackgroundTimer?.toString())
+        mBackgroundTimer?.cancel()
     }
 
     companion object {
@@ -133,5 +173,16 @@ class FullscreenActivity : Activity() {
          * and a change of the status and navigation bar.
          */
         private val UI_ANIMATION_DELAY = 300
+
+        private var pic_list = arrayOf(
+                "http://f.hiphotos.baidu.com/image/pic/item/63d0f703918fa0ece5f167da2a9759ee3d6ddb37.jpg",
+                "http://i1.hdslb.com/bfs/archive/96dce37d84f4c86595b6ad2f5b31f2547e7a6f06.jpg",
+                "http://img.tupianzj.com/uploads/allimg/20151229/pbovne5t13p202.jpg",
+                "http://img.tupianzj.com/uploads/allimg/160518/9-16051Q51I1I3.JPG"
+        )
+
+        private val TAG = "EasyDPF"
+        private val BACKGROUND_UPDATE_DELAY = 2000
+
     }
 }
