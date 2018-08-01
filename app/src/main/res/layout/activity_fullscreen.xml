@@ -16,6 +16,8 @@
         android:layout_height="match_parent"
         android:gravity="center"
         android:keepScreenOn="true"
+        android:focusable="true"
+        android:focusedByDefault="true"
         android:textSize="50sp"
         android:textStyle="bold" />
 

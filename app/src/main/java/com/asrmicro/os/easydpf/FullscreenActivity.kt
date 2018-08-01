@@ -3,6 +3,8 @@ package com.asrmicro.os.easydpf
 import android.app.Activity
 import android.os.Bundle
 import android.os.Handler
+import android.view.KeyEvent
+import android.view.KeyEvent.KEYCODE_DPAD_RIGHT
 import android.view.View
 //import com.asrmicro.os.easydpf.R.id.fullscreen_content_controls
 import kotlinx.android.synthetic.main.activity_fullscreen.*
@@ -32,6 +34,18 @@ class FullscreenActivity : Activity() {
                 View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION or
                 View.SYSTEM_UI_FLAG_HIDE_NAVIGATION
     }
+
+    override fun onKeyUp(keyCode: Int, event: KeyEvent?): Boolean {
+        if (keyCode == KEYCODE_DPAD_RIGHT)
+            Glide.with(this).load(R.color.black_overlay)
+                    .error(R.color.black_overlay)
+                    //.centerCrop()
+                    .crossFade()
+                    .placeholder(R.color.black_overlay).into(fullscreen_content);
+
+        return super.onKeyUp(keyCode, event)
+    }
+
     private val mHideRunnable = Runnable { hide() }
     /**
      * Touch listener to use for in-layout UI controls to delay hiding the
@@ -68,7 +82,14 @@ class FullscreenActivity : Activity() {
         // are available.
         delayedHide(100)
 
-
+        fullscreen_content.isFocusable = true
+        fullscreen_content.requestFocus()
+/*
+        fullscreen_content.postDelayed(Runnable {
+            fullscreen_content.isFocusable = true
+            fullscreen_content.requestFocus()},
+                1000)
+*/
         Glide.with(this).load("http://f.hiphotos.baidu.com/image/pic/item/63d0f703918fa0ece5f167da2a9759ee3d6ddb37.jpg")
                 .error(R.color.black_overlay)
                 //.centerCrop()
