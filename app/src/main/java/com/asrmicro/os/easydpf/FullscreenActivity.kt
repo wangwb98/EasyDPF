@@ -7,6 +7,11 @@ import android.view.View
 //import com.asrmicro.os.easydpf.R.id.fullscreen_content_controls
 import kotlinx.android.synthetic.main.activity_fullscreen.*
 
+import com.bumptech.glide.Glide
+import com.bumptech.glide.load.resource.drawable.GlideDrawable
+import com.bumptech.glide.request.animation.GlideAnimation
+import com.bumptech.glide.request.target.SimpleTarget
+
 /**
  * An example full-screen activity that shows and hides the system UI (i.e.
  * status bar and navigation/system bar) with user interaction.
@@ -62,6 +67,14 @@ class FullscreenActivity : Activity() {
         // created, to briefly hint to the user that UI controls
         // are available.
         delayedHide(100)
+
+
+        Glide.with(this).load("http://f.hiphotos.baidu.com/image/pic/item/63d0f703918fa0ece5f167da2a9759ee3d6ddb37.jpg")
+                .error(R.color.black_overlay)
+                //.centerCrop()
+                .crossFade()
+                .placeholder(R.color.black_overlay).into(fullscreen_content);
+
     }
 
     private fun hide() {
