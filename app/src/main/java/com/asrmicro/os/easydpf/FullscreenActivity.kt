@@ -1,6 +1,8 @@
 package com.asrmicro.os.easydpf
 
 import android.app.Activity
+import android.content.Context
+import android.content.SharedPreferences
 import android.os.Bundle
 import android.os.Handler
 import android.util.Log
@@ -8,6 +10,8 @@ import android.view.KeyEvent
 import android.view.KeyEvent.KEYCODE_DPAD_LEFT
 import android.view.KeyEvent.KEYCODE_DPAD_RIGHT
 import android.view.View
+import android.widget.Toast
+//import com.asrmicro.os.easydpf.FullscreenActivity.UpdateBackgroundTask.Companion.pic_list
 //import com.asrmicro.os.easydpf.R.id.fullscreen_content_controls
 import kotlinx.android.synthetic.main.activity_fullscreen.*
 
@@ -15,7 +19,13 @@ import com.bumptech.glide.Glide
 import com.bumptech.glide.load.resource.drawable.GlideDrawable
 import com.bumptech.glide.request.animation.GlideAnimation
 import com.bumptech.glide.request.target.SimpleTarget
+import com.securepreferences.SecurePreferences
 import java.util.*
+
+
+import jcifs.smb.NtlmPasswordAuthentication
+import jcifs.smb.SmbFile
+
 
 /**
  * An example full-screen activity that shows and hides the system UI (i.e.
@@ -24,6 +34,15 @@ import java.util.*
 class FullscreenActivity : Activity() {
     private var mPicIndex = 0
     private var mBackgroundTimer: Timer? = null
+    private var mBackgroundTimerSamba: Timer? = null
+
+    private var prefs : SecurePreferences? = null
+    private var file_list : MutableList <String> = mutableListOf(
+            "http://f.hiphotos.baidu.com/image/pic/item/63d0f703918fa0ece5f167da2a9759ee3d6ddb37.jpg",
+            "http://i1.hdslb.com/bfs/archive/96dce37d84f4c86595b6ad2f5b31f2547e7a6f06.jpg",
+            "http://img.tupianzj.com/uploads/allimg/20151229/pbovne5t13p202.jpg",
+            "http://img.tupianzj.com/uploads/allimg/160518/9-16051Q51I1I3.JPG"
+    )
 
     private val mHideHandler = Handler()
     private val mHidePart2Runnable = Runnable {
@@ -67,6 +86,8 @@ class FullscreenActivity : Activity() {
         setContentView(R.layout.activity_fullscreen)
         actionBar?.setDisplayHomeAsUpEnabled(true)
 
+        prefs = SecurePreferences(applicationContext)
+
         // Set up the user interaction to manually show or hide the system UI.
 //        fullscreen_content.setOnClickListener { toggle() }
 
@@ -74,6 +95,7 @@ class FullscreenActivity : Activity() {
         // operations to prevent the jarring behavior of controls going away
         // while interacting with the UI.
 //        dummy_button.setOnTouchListener(mDelayHideTouchListener)
+
     }
 
     override fun onPostCreate(savedInstanceState: Bundle?) {
@@ -92,13 +114,23 @@ class FullscreenActivity : Activity() {
             fullscreen_content.requestFocus()},
                 1000)
 */
-        Glide.with(this).load(pic_list[mPicIndex])
+        Glide.with(this).load(file_list[mPicIndex])
                 .error(R.color.black_overlay)
                 //.centerCrop()
                 .crossFade()
-                .placeholder(R.color.black_overlay).into(fullscreen_content);
-
+                .placeholder(R.color.black_overlay).into(fullscreen_content)
+/* code to generate the xml of sharedpreference
+        val prefEditor = prefs?.edit()
+        if ( prefEditor!= null) {
+            prefEditor.putString("User", "public")
+            prefEditor.putString("Password", "public")
+            prefEditor.putString("Server", "10.1.170.180")
+            prefEditor.putString("Folder", "public")
+            prefEditor.commit()
+        }
+        */
         startBackgroundTimer()
+        startBackgroundTimerSamba() // kick start the Samba file list refresh.
     }
 
     private fun hide() {
@@ -124,28 +156,72 @@ class FullscreenActivity : Activity() {
         mBackgroundTimer?.schedule(UpdateBackgroundTask(), BACKGROUND_UPDATE_DELAY.toLong())
     }
 
-    private inner class UpdateBackgroundTask : TimerTask() {
+    private fun startBackgroundTimerSamba() {
+        mBackgroundTimerSamba?.cancel()
+        mBackgroundTimerSamba = Timer()
+        mBackgroundTimerSamba?.schedule(UpdatePictureFileListTask(), 0)
+    }
 
+    private inner class UpdateBackgroundTask () : TimerTask() {
         override fun run() {
             mHideHandler.post { updateBackground(true) }
         }
     }
 
+    private inner class UpdatePictureFileListTask () : TimerTask() {
+        override fun run() {
+            val user = prefs!!.getString("User", "public")
+            val pass =prefs!!.getString("Password", "public")
+            val sharedFolder = prefs!!.getString("Folder", "public")
+            val server = prefs!!.getString("Server", "127.0.0.1")
+            val url = "smb://" + server + "/" + sharedFolder + "/"
+            val auth = NtlmPasswordAuthentication(
+                    null, user, pass)
+
+            try{
+                jcifs.Config.registerSmbURLHandler()
+                file_list.addAll( getFilesFromDir(url, auth) )
+                //var file_list = sfile.list()
+                for ( i in file_list )
+                    Log.d(TAG, "file name:" + i)
+                runOnUiThread { -> Toast.makeText(applicationContext, file_list.joinToString("\n", limit = 10, prefix = "File list\n"), Toast.LENGTH_SHORT).show() }
+            }catch(e:Exception){
+                Log.d(TAG, "exception: " + url + "Exception::" + e.toString())
+                runOnUiThread { -> Toast.makeText(applicationContext, url+":"+e.toString(), Toast.LENGTH_LONG).show() }
+            }
+        }
+    }
+
+    fun getFilesFromDir (path: String, auth:NtlmPasswordAuthentication): MutableList<String> {
+        val baseDir = SmbFile(path, auth)
+        val files = baseDir.listFiles { f -> f.isDirectory || f.name.endsWith("jpg", ignoreCase = true) || f.name.endsWith("png", ignoreCase = true) }
+        val results = mutableListOf<String>()
+
+        for (file in files) {
+            if (file.isDirectory)
+                results.addAll(getFilesFromDir(file.path, auth))
+            else
+                results.add(file.path)
+        }
+        return results
+    }
+
     @Synchronized private fun updateBackground(forward: Boolean) {
         if (forward) {
-            mPicIndex = (mPicIndex + 1) % pic_list.size
+            mPicIndex = (mPicIndex + 1) % file_list.size
         }
         else {
-            if (mPicIndex < 1) mPicIndex = pic_list.size - 1
+            if (mPicIndex < 1) mPicIndex = file_list.size - 1
             else mPicIndex--
         }
 
         Glide.with(this)
-                .load(pic_list[mPicIndex])
+                .load(file_list[mPicIndex])
                 .error(R.color.black_overlay)
                 //.centerCrop()
                 .crossFade()
-                .placeholder(R.color.black_overlay).into(fullscreen_content);
+                .thumbnail(0.1f)
+                .placeholder(R.color.black_overlay).into(fullscreen_content)
         startBackgroundTimer()
     }
 
@@ -174,14 +250,8 @@ class FullscreenActivity : Activity() {
          */
         private val UI_ANIMATION_DELAY = 300
 
-        private var pic_list = arrayOf(
-                "http://f.hiphotos.baidu.com/image/pic/item/63d0f703918fa0ece5f167da2a9759ee3d6ddb37.jpg",
-                "http://i1.hdslb.com/bfs/archive/96dce37d84f4c86595b6ad2f5b31f2547e7a6f06.jpg",
-                "http://img.tupianzj.com/uploads/allimg/20151229/pbovne5t13p202.jpg",
-                "http://img.tupianzj.com/uploads/allimg/160518/9-16051Q51I1I3.JPG"
-        )
-
         private val TAG = "EasyDPF"
+
         private val BACKGROUND_UPDATE_DELAY = 2000
 
     }
