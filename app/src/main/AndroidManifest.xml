@@ -30,6 +30,9 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+        <meta-data
+            android:name="com.asrmicro.os.easydpf.MyGlideModule"
+            android:value="GlideModule" />
     </application>
 
 </manifest>
