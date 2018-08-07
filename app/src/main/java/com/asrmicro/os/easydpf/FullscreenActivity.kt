@@ -11,6 +11,7 @@ import android.view.KeyEvent.KEYCODE_DPAD_LEFT
 import android.view.KeyEvent.KEYCODE_DPAD_RIGHT
 import android.view.View
 import android.widget.Toast
+import com.asrmicro.os.easydpf.R.id.fullscreen_content
 //import com.asrmicro.os.easydpf.FullscreenActivity.UpdateBackgroundTask.Companion.pic_list
 //import com.asrmicro.os.easydpf.R.id.fullscreen_content_controls
 import kotlinx.android.synthetic.main.activity_fullscreen.*
@@ -37,6 +38,9 @@ class FullscreenActivity : Activity() {
     private var mBackgroundTimerSamba: Timer? = null
 
     private var prefs : SecurePreferences? = null
+    private var last_Pic_name : String ? = null
+    private var mFoundLastPic = false
+
     private var file_list : MutableList <String> = mutableListOf(
             "http://f.hiphotos.baidu.com/image/pic/item/63d0f703918fa0ece5f167da2a9759ee3d6ddb37.jpg",
             "http://i1.hdslb.com/bfs/archive/96dce37d84f4c86595b6ad2f5b31f2547e7a6f06.jpg",
@@ -87,6 +91,8 @@ class FullscreenActivity : Activity() {
         actionBar?.setDisplayHomeAsUpEnabled(true)
 
         prefs = SecurePreferences(applicationContext)
+        last_Pic_name = prefs!!.getString("RecentPic", "http://img.tupianzj.com/uploads/allimg/20151229/pbovne5t13p202.jpg")
+        file_list.add(last_Pic_name!!)
 
         // Set up the user interaction to manually show or hide the system UI.
 //        fullscreen_content.setOnClickListener { toggle() }
@@ -172,15 +178,15 @@ class FullscreenActivity : Activity() {
         override fun run() {
             val user = prefs!!.getString("User", "public")
             val pass =prefs!!.getString("Password", "public")
-            val sharedFolder = prefs!!.getString("Folder", "public")
-            val server = prefs!!.getString("Server", "127.0.0.1")
+            val sharedFolder = prefs!!.getString("Folder", "photo")
+            val server = prefs!!.getString("Server", "192.168.0.2")
             val url = "smb://" + server + "/" + sharedFolder + "/"
             val auth = NtlmPasswordAuthentication(
                     null, user, pass)
 
             try{
                 jcifs.Config.registerSmbURLHandler()
-                file_list.addAll( getFilesFromDir(url, auth) )
+                file_list.addAll( getFilesFromDir(url, NtlmPasswordAuthentication.ANONYMOUS) )
                 //var file_list = sfile.list()
                 for ( i in file_list )
                     Log.d(TAG, "file name:" + i)
@@ -197,10 +203,16 @@ class FullscreenActivity : Activity() {
         val files = baseDir.listFiles { f -> f.isDirectory || f.name.endsWith("jpg", ignoreCase = true) || f.name.endsWith("png", ignoreCase = true) }
         val results = mutableListOf<String>()
 
+        if ( file_list.size >= 200)
+            return results
+
         for (file in files) {
             if (file.isDirectory)
                 results.addAll(getFilesFromDir(file.path, auth))
-            else
+            else if (file.name == last_Pic_name) {
+                mFoundLastPic = true
+            }
+            else if (mFoundLastPic == true)
                 results.add(file.path)
         }
         return results
@@ -222,6 +234,13 @@ class FullscreenActivity : Activity() {
                 .crossFade()
                 .thumbnail(0.1f)
                 .placeholder(R.color.black_overlay).into(fullscreen_content)
+
+        val prefEditor = prefs?.edit()
+        if ( prefEditor!= null) {   // save the RecentPic name.
+            prefEditor.putString("RecentPic", file_list[mPicIndex])
+            prefEditor.commit()
+        }
+
         startBackgroundTimer()
     }
 
