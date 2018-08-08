@@ -1,6 +1,8 @@
 package com.asrmicro.os.easydpf
 
 import android.app.Activity
+import android.content.Context
+import android.content.SharedPreferences
 import android.os.Bundle
 import android.os.Handler
 import android.util.Log
@@ -32,7 +34,7 @@ class FullscreenActivity : Activity() {
     private var mBackgroundTimer: Timer? = null
     private var mBackgroundTimerSamba: Timer? = null
 
-    private var prefs : SecurePreferences? = null
+    private var prefs : SharedPreferences? = null
     private var mLastPicName : String ? = null
     private var mFoundLastPic = false
 
@@ -85,7 +87,7 @@ class FullscreenActivity : Activity() {
         setContentView(R.layout.activity_fullscreen)
         actionBar?.setDisplayHomeAsUpEnabled(true)
 
-        prefs = SecurePreferences(applicationContext)
+        prefs = getSharedPreferences("config", Context.MODE_PRIVATE)
         mLastPicName = prefs!!.getString("RecentPic", "http://img.tupianzj.com/uploads/allimg/20151229/pbovne5t13p202.jpg")
         file_list.add(mLastPicName!!)
 
