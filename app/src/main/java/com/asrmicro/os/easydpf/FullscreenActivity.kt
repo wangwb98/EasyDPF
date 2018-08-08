@@ -17,6 +17,7 @@ import com.asrmicro.os.easydpf.R.id.fullscreen_content
 import kotlinx.android.synthetic.main.activity_fullscreen.*
 
 import com.bumptech.glide.Glide
+import com.bumptech.glide.Priority
 import com.securepreferences.SecurePreferences
 import java.util.*
 
@@ -30,7 +31,7 @@ import jcifs.smb.SmbFile
  * status bar and navigation/system bar) with user interaction.
  */
 class FullscreenActivity : Activity() {
-    private var mPicIndex = 0
+    private var mPicIndex = -1
     private var mBackgroundTimer: Timer? = null
     private var mBackgroundTimerSamba: Timer? = null
 
@@ -117,11 +118,7 @@ class FullscreenActivity : Activity() {
             fullscreen_content.requestFocus()},
                 1000)
 */
-        Glide.with(this).load(file_list[mPicIndex])
-                .error(R.color.black_overlay)
-                //.centerCrop()
-                .crossFade()
-                .placeholder(R.color.black_overlay).into(fullscreen_content)
+
 /* code to generate the xml of sharedpreference
         val prefEditor = prefs?.edit()
         if ( prefEditor!= null) {
@@ -132,10 +129,7 @@ class FullscreenActivity : Activity() {
             prefEditor.commit()
         }
         */
-        //startBackgroundTimer()
-        mBackgroundTimer?.cancel()
-        mBackgroundTimer = Timer()
-        mBackgroundTimer?.schedule(UpdateBackgroundTask(),0)
+        updateBackground(true)
         startBackgroundTimerSamba() // kick start the Samba file list refresh.
     }
 
@@ -165,7 +159,7 @@ class FullscreenActivity : Activity() {
     private fun startBackgroundTimerSamba() {
         mBackgroundTimerSamba?.cancel()
         mBackgroundTimerSamba = Timer()
-        mBackgroundTimerSamba?.schedule(UpdatePictureFileListTask(), 0)
+        mBackgroundTimerSamba?.schedule(UpdatePictureFileListTask(), 5000)
     }
 
     private inner class UpdateBackgroundTask () : TimerTask() {
@@ -237,6 +231,7 @@ class FullscreenActivity : Activity() {
                 .thumbnail(0.1f)
                 .placeholder(R.color.black_overlay).into(fullscreen_content)
 
+        pictureInfo.text = file_list[mPicIndex] + "\n"
         val prefEditor = prefs?.edit()
         if ( prefEditor!= null) {   // save the RecentPic name.
             prefEditor.putString("RecentPic", file_list[mPicIndex])

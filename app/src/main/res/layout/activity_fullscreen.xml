@@ -21,5 +21,11 @@
         android:textSize="50sp"
         android:textStyle="bold" />
 
+    <TextView
+        android:id="@+id/pictureInfo"
+        android:layout_width="121dp"
+        android:layout_height="324dp"
+        android:text="TextView" />
+
 
 </FrameLayout>
