@@ -1,8 +1,6 @@
 package com.asrmicro.os.easydpf
 
 import android.app.Activity
-import android.content.Context
-import android.content.SharedPreferences
 import android.os.Bundle
 import android.os.Handler
 import android.util.Log
@@ -17,9 +15,6 @@ import com.asrmicro.os.easydpf.R.id.fullscreen_content
 import kotlinx.android.synthetic.main.activity_fullscreen.*
 
 import com.bumptech.glide.Glide
-import com.bumptech.glide.load.resource.drawable.GlideDrawable
-import com.bumptech.glide.request.animation.GlideAnimation
-import com.bumptech.glide.request.target.SimpleTarget
 import com.securepreferences.SecurePreferences
 import java.util.*
 
@@ -38,7 +33,7 @@ class FullscreenActivity : Activity() {
     private var mBackgroundTimerSamba: Timer? = null
 
     private var prefs : SecurePreferences? = null
-    private var last_Pic_name : String ? = null
+    private var mLastPicName : String ? = null
     private var mFoundLastPic = false
 
     private var file_list : MutableList <String> = mutableListOf(
@@ -91,8 +86,8 @@ class FullscreenActivity : Activity() {
         actionBar?.setDisplayHomeAsUpEnabled(true)
 
         prefs = SecurePreferences(applicationContext)
-        last_Pic_name = prefs!!.getString("RecentPic", "http://img.tupianzj.com/uploads/allimg/20151229/pbovne5t13p202.jpg")
-        file_list.add(last_Pic_name!!)
+        mLastPicName = prefs!!.getString("RecentPic", "http://img.tupianzj.com/uploads/allimg/20151229/pbovne5t13p202.jpg")
+        file_list.add(mLastPicName!!)
 
         // Set up the user interaction to manually show or hide the system UI.
 //        fullscreen_content.setOnClickListener { toggle() }
@@ -135,7 +130,10 @@ class FullscreenActivity : Activity() {
             prefEditor.commit()
         }
         */
-        startBackgroundTimer()
+        //startBackgroundTimer()
+        mBackgroundTimer?.cancel()
+        mBackgroundTimer = Timer()
+        mBackgroundTimer?.schedule(UpdateBackgroundTask(),0)
         startBackgroundTimerSamba() // kick start the Samba file list refresh.
     }
 
@@ -186,11 +184,11 @@ class FullscreenActivity : Activity() {
 
             try{
                 jcifs.Config.registerSmbURLHandler()
-                file_list.addAll( getFilesFromDir(url, NtlmPasswordAuthentication.ANONYMOUS) )
+                file_list.addAll( getFilesFromDir("smb://192.168.0.2/photo/", NtlmPasswordAuthentication.ANONYMOUS) )
                 //var file_list = sfile.list()
                 for ( i in file_list )
                     Log.d(TAG, "file name:" + i)
-                runOnUiThread { -> Toast.makeText(applicationContext, file_list.joinToString("\n", limit = 10, prefix = "File list\n"), Toast.LENGTH_SHORT).show() }
+                runOnUiThread { -> Toast.makeText(applicationContext, file_list.joinToString("\n", limit = 10, prefix = "File list\n"), Toast.LENGTH_LONG).show() }
             }catch(e:Exception){
                 Log.d(TAG, "exception: " + url + "Exception::" + e.toString())
                 runOnUiThread { -> Toast.makeText(applicationContext, url+":"+e.toString(), Toast.LENGTH_LONG).show() }
@@ -203,17 +201,19 @@ class FullscreenActivity : Activity() {
         val files = baseDir.listFiles { f -> f.isDirectory || f.name.endsWith("jpg", ignoreCase = true) || f.name.endsWith("png", ignoreCase = true) }
         val results = mutableListOf<String>()
 
-        if ( file_list.size >= 200)
+        if ( file_list.size >= 500)
             return results
 
         for (file in files) {
             if (file.isDirectory)
                 results.addAll(getFilesFromDir(file.path, auth))
-            else if (file.name == last_Pic_name) {
+            else if (mFoundLastPic == true) {
+                results.add(file.path)
+                Thread.sleep(500) // take a rest for 0.5s when we found one picture.
+            }
+            else if (file.path == mLastPicName || ! file.path.startsWith("smb")) {
                 mFoundLastPic = true
             }
-            else if (mFoundLastPic == true)
-                results.add(file.path)
         }
         return results
     }
@@ -271,7 +271,7 @@ class FullscreenActivity : Activity() {
 
         private val TAG = "EasyDPF"
 
-        private val BACKGROUND_UPDATE_DELAY = 2000
+        private val BACKGROUND_UPDATE_DELAY = 12000
 
     }
 }
