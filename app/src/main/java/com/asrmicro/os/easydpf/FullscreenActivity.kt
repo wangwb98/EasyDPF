@@ -7,18 +7,15 @@ import android.os.Bundle
 import android.os.Handler
 import android.util.Log
 import android.view.KeyEvent
-import android.view.KeyEvent.KEYCODE_DPAD_LEFT
-import android.view.KeyEvent.KEYCODE_DPAD_RIGHT
+import android.view.KeyEvent.*
 import android.view.View
 import android.widget.Toast
-import com.asrmicro.os.easydpf.R.id.fullscreen_content
 //import com.asrmicro.os.easydpf.FullscreenActivity.UpdateBackgroundTask.Companion.pic_list
 //import com.asrmicro.os.easydpf.R.id.fullscreen_content_controls
 import kotlinx.android.synthetic.main.activity_fullscreen.*
 
 import com.bumptech.glide.Glide
-import com.bumptech.glide.Priority
-import com.securepreferences.SecurePreferences
+import com.google.gson.Gson
 import java.util.*
 
 
@@ -35,10 +32,9 @@ class FullscreenActivity : Activity() {
     private var mBackgroundTimer: Timer? = null
     private var mBackgroundTimerSamba: Timer? = null
     private var serverFileCount = 0
+    private var mIndexing = false
 
     private var prefs : SharedPreferences? = null
-    private var mLastPicName : String ? = null
-    private var mFoundLastPic = false
 
     private var file_list : MutableList <String> = mutableListOf(
             "http://f.hiphotos.baidu.com/image/pic/item/63d0f703918fa0ece5f167da2a9759ee3d6ddb37.jpg",
@@ -66,6 +62,7 @@ class FullscreenActivity : Activity() {
     override fun onKeyUp(keyCode: Int, event: KeyEvent?): Boolean {
         if (keyCode == KEYCODE_DPAD_RIGHT ) updateBackground(true)
         if (keyCode == KEYCODE_DPAD_LEFT ) updateBackground(false)
+        if (keyCode == KEYCODE_DPAD_UP ) startBackgroundTimerSamba()
 
         return super.onKeyUp(keyCode, event)
     }
@@ -90,17 +87,15 @@ class FullscreenActivity : Activity() {
         actionBar?.setDisplayHomeAsUpEnabled(true)
 
         prefs = getSharedPreferences("config", Context.MODE_PRIVATE)
-        mLastPicName = prefs!!.getString("RecentPic", "http://img.tupianzj.com/uploads/allimg/20151229/pbovne5t13p202.jpg")
-        file_list.add(mLastPicName!!)
-
-        // Set up the user interaction to manually show or hide the system UI.
-//        fullscreen_content.setOnClickListener { toggle() }
-
-        // Upon interacting with UI controls, delay any scheduled hide()
-        // operations to prevent the jarring behavior of controls going away
-        // while interacting with the UI.
-//        dummy_button.setOnTouchListener(mDelayHideTouchListener)
-
+        mPicIndex = prefs!!.getInt("LastPictureIndex", -1)
+        val gson = Gson()
+        val pref_FileListStr = prefs?.getString("FileList", "")
+        if (pref_FileListStr != "") {
+            val mList: MutableList<String> = gson.fromJson<MutableList<String>>(pref_FileListStr, MutableList::class.java)
+            file_list.addAll(mList)
+        }
+        else
+            startBackgroundTimerSamba() // kick start the Samba file list refresh.
     }
 
     override fun onPostCreate(savedInstanceState: Bundle?) {
@@ -131,7 +126,6 @@ class FullscreenActivity : Activity() {
         }
         */
         updateBackground(true)
-        startBackgroundTimerSamba() // kick start the Samba file list refresh.
     }
 
     private fun hide() {
@@ -158,6 +152,12 @@ class FullscreenActivity : Activity() {
     }
 
     private fun startBackgroundTimerSamba() {
+        if (mIndexing) {
+            Log.d(TAG, "Previous index action not finished")
+            Toast.makeText( applicationContext,"Previous index action not finished", Toast.LENGTH_LONG)
+            return
+        }
+        mIndexing = true
         mBackgroundTimerSamba?.cancel()
         mBackgroundTimerSamba = Timer()
         mBackgroundTimerSamba?.schedule(UpdatePictureFileListTask(), 5000)
@@ -190,6 +190,17 @@ class FullscreenActivity : Activity() {
                 Log.d(TAG, "exception: " + url + "Exception::" + e.toString())
                 runOnUiThread { -> Toast.makeText(applicationContext, url+":"+e.toString(), Toast.LENGTH_LONG).show() }
             }
+/*            for (i in 1..20000)
+                file_list.add("smb://192.168.0.2/photo/测试目录测试目录测试目录1/IMG12341234_${i}.JPG")*/
+            val gson = Gson()
+            val strFileList = gson.toJson(file_list)
+            val prefEditor = prefs?.edit()
+                prefEditor?.putString("FileList", strFileList)
+                prefEditor?.commit()
+
+            Log.d(TAG, "Finished indexing ${serverFileCount} pictures from server")
+            runOnUiThread { -> Toast.makeText(applicationContext, "Finished indexing ${serverFileCount} pictures from server", Toast.LENGTH_LONG).show() }
+            mIndexing = false
         }
     }
 
@@ -198,19 +209,13 @@ class FullscreenActivity : Activity() {
         val files = baseDir.listFiles { f -> f.isDirectory || f.name.endsWith("jpg", ignoreCase = true) || f.name.endsWith("png", ignoreCase = true) }
         val results = mutableListOf<String>()
 
-        if ( file_list.size >= 200)
-            return results
-
         for (file in files) {
             serverFileCount ++
             if (file.isDirectory)
                 getFilesFromDir(file.path, auth)
-            else if (mFoundLastPic == true) {
+            else {
                 file_list.add(file.path)
                 Thread.sleep(500) // take a rest for 0.5s when we found one picture.
-            }
-            else if (file.path == mLastPicName || ! mLastPicName!!.startsWith("smb")) {
-                mFoundLastPic = true
             }
         }
         return results
@@ -233,10 +238,10 @@ class FullscreenActivity : Activity() {
                 //.thumbnail(0.1f)
                 .placeholder(R.color.black_overlay).into(fullscreen_content)
 
-        pictureInfo.text = file_list[mPicIndex] + "\n"
+        pictureInfo.text = "${mPicIndex}/${file_list.size}\n${file_list[mPicIndex]}\n"
         val prefEditor = prefs?.edit()
-        if ( prefEditor!= null && file_list[mPicIndex].startsWith("smb")) {   // save the RecentPic name.
-            prefEditor.putString("RecentPic", file_list[mPicIndex])
+        if ( prefEditor!= null) {   // save the RecentPic Index.
+            prefEditor.putInt("LastPictureIndex", mPicIndex)
             prefEditor.commit()
         }
 
@@ -270,7 +275,7 @@ class FullscreenActivity : Activity() {
 
         private val TAG = "EasyDPF"
 
-        private val BACKGROUND_UPDATE_DELAY = 12000
+        private val BACKGROUND_UPDATE_DELAY = 8000
 
     }
 }
