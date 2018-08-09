@@ -34,6 +34,7 @@ class FullscreenActivity : Activity() {
     private var mPicIndex = -1
     private var mBackgroundTimer: Timer? = null
     private var mBackgroundTimerSamba: Timer? = null
+    private var serverFileCount = 0
 
     private var prefs : SharedPreferences? = null
     private var mLastPicName : String ? = null
@@ -180,7 +181,7 @@ class FullscreenActivity : Activity() {
 
             try{
                 jcifs.Config.registerSmbURLHandler()
-                file_list.addAll( getFilesFromDir("smb://192.168.0.2/photo/", NtlmPasswordAuthentication.ANONYMOUS) )
+                getFilesFromDir("smb://192.168.0.2/photo/", NtlmPasswordAuthentication.ANONYMOUS)
                 //var file_list = sfile.list()
                 for ( i in file_list )
                     Log.d(TAG, "file name:" + i)
@@ -197,17 +198,18 @@ class FullscreenActivity : Activity() {
         val files = baseDir.listFiles { f -> f.isDirectory || f.name.endsWith("jpg", ignoreCase = true) || f.name.endsWith("png", ignoreCase = true) }
         val results = mutableListOf<String>()
 
-        if ( file_list.size >= 500)
+        if ( file_list.size >= 200)
             return results
 
         for (file in files) {
+            serverFileCount ++
             if (file.isDirectory)
-                results.addAll(getFilesFromDir(file.path, auth))
+                getFilesFromDir(file.path, auth)
             else if (mFoundLastPic == true) {
-                results.add(file.path)
+                file_list.add(file.path)
                 Thread.sleep(500) // take a rest for 0.5s when we found one picture.
             }
-            else if (file.path == mLastPicName || ! file.path.startsWith("smb")) {
+            else if (file.path == mLastPicName || ! mLastPicName!!.startsWith("smb")) {
                 mFoundLastPic = true
             }
         }
@@ -228,12 +230,12 @@ class FullscreenActivity : Activity() {
                 .error(R.color.black_overlay)
                 //.centerCrop()
                 .crossFade()
-                .thumbnail(0.1f)
+                //.thumbnail(0.1f)
                 .placeholder(R.color.black_overlay).into(fullscreen_content)
 
         pictureInfo.text = file_list[mPicIndex] + "\n"
         val prefEditor = prefs?.edit()
-        if ( prefEditor!= null) {   // save the RecentPic name.
+        if ( prefEditor!= null && file_list[mPicIndex].startsWith("smb")) {   // save the RecentPic name.
             prefEditor.putString("RecentPic", file_list[mPicIndex])
             prefEditor.commit()
         }
