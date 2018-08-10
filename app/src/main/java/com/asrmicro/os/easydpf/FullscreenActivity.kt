@@ -37,10 +37,7 @@ class FullscreenActivity : Activity() {
     private var prefs : SharedPreferences? = null
 
     private var file_list : MutableList <String> = mutableListOf(
-            "http://f.hiphotos.baidu.com/image/pic/item/63d0f703918fa0ece5f167da2a9759ee3d6ddb37.jpg",
-            "http://i1.hdslb.com/bfs/archive/96dce37d84f4c86595b6ad2f5b31f2547e7a6f06.jpg",
-            "http://img.tupianzj.com/uploads/allimg/20151229/pbovne5t13p202.jpg",
-            "http://img.tupianzj.com/uploads/allimg/160518/9-16051Q51I1I3.JPG"
+            "http://pic122.nipic.com/file/20170216/24421947_173534660000_2.jpg"
     )
 
     private val mHideHandler = Handler()
@@ -215,7 +212,7 @@ class FullscreenActivity : Activity() {
                 getFilesFromDir(file.path, auth)
             else {
                 file_list.add(file.path)
-                Thread.sleep(500) // take a rest for 0.5s when we found one picture.
+                //Thread.sleep(500) // take a rest for 0.5s when we found one picture.
             }
         }
         return results
