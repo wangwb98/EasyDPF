@@ -15,6 +15,7 @@ import android.widget.Toast
 import kotlinx.android.synthetic.main.activity_fullscreen.*
 
 import com.bumptech.glide.Glide
+import com.bumptech.glide.load.engine.DiskCacheStrategy
 import com.google.gson.Gson
 import java.util.*
 
@@ -151,7 +152,7 @@ class FullscreenActivity : Activity() {
     private fun startBackgroundTimerSamba() {
         if (mIndexing) {
             Log.d(TAG, "Previous index action not finished")
-            Toast.makeText( applicationContext,"Previous index action not finished", Toast.LENGTH_LONG)
+            Toast.makeText( applicationContext,"Previous index action not finished", Toast.LENGTH_LONG).show()
             return
         }
         mIndexing = true
@@ -193,7 +194,7 @@ class FullscreenActivity : Activity() {
             val strFileList = gson.toJson(file_list)
             val prefEditor = prefs?.edit()
                 prefEditor?.putString("FileList", strFileList)
-                prefEditor?.commit()
+                prefEditor?.apply()
 
             Log.d(TAG, "Finished indexing ${serverFileCount} pictures from server")
             runOnUiThread { -> Toast.makeText(applicationContext, "Finished indexing ${serverFileCount} pictures from server", Toast.LENGTH_LONG).show() }
@@ -210,7 +211,7 @@ class FullscreenActivity : Activity() {
             serverFileCount ++
             if (file.isDirectory)
                 getFilesFromDir(file.path, auth)
-            else {
+            else if (! file_list.contains(file.path) ){
                 file_list.add(file.path)
                 //Thread.sleep(500) // take a rest for 0.5s when we found one picture.
             }
@@ -229,19 +230,23 @@ class FullscreenActivity : Activity() {
 
         Glide.with(this)
                 .load(file_list[mPicIndex])
+                .diskCacheStrategy(DiskCacheStrategy.ALL)
                 .error(R.color.black_overlay)
                 //.centerCrop()
                 .crossFade()
                 //.thumbnail(0.1f)
-                .placeholder(R.color.black_overlay).into(fullscreen_content)
+                .placeholder(R.color.black_overlay)
+                .into(fullscreen_content)
 
         pictureInfo.text = "${mPicIndex}/${file_list.size}\n${file_list[mPicIndex]}\n"
         val prefEditor = prefs?.edit()
         if ( prefEditor!= null) {   // save the RecentPic Index.
             prefEditor.putInt("LastPictureIndex", mPicIndex)
-            prefEditor.commit()
+            prefEditor.apply()
         }
-
+        Glide.with(this)
+                .load(file_list[(mPicIndex+1)%file_list.size])
+                .downloadOnly(20, 20)
         startBackgroundTimer()
     }
 
