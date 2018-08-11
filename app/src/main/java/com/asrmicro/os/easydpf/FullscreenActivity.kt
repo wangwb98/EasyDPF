@@ -233,7 +233,8 @@ class FullscreenActivity : Activity() {
                 .diskCacheStrategy(DiskCacheStrategy.ALL)
                 .error(R.color.black_overlay)
                 //.centerCrop()
-                .crossFade()
+                .dontAnimate()
+                //.crossFade()
                 //.thumbnail(0.1f)
                 .placeholder(R.color.black_overlay)
                 .into(fullscreen_content)
@@ -246,7 +247,7 @@ class FullscreenActivity : Activity() {
         }
         Glide.with(this)
                 .load(file_list[(mPicIndex+1)%file_list.size])
-                .downloadOnly(20, 20)
+                .downloadOnly(1920, 1080)
         startBackgroundTimer()
     }
 
