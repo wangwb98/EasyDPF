@@ -231,7 +231,7 @@ class FullscreenActivity : Activity() {
         Glide.with(this)
                 .load(file_list[mPicIndex])
                 .diskCacheStrategy(DiskCacheStrategy.ALL)
-                .error(R.color.black_overlay)
+                .error(R.drawable.ic_error_black_240dp)
                 //.centerCrop()
                 .dontAnimate()
                 //.crossFade()
