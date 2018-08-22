@@ -2,9 +2,11 @@ package com.asrmicro.os.easydpf
 
 import android.app.Activity
 import android.content.Context
+import android.content.Intent
 import android.content.SharedPreferences
 import android.os.Bundle
 import android.os.Handler
+import android.preference.PreferenceManager
 import android.util.Log
 import android.view.KeyEvent
 import android.view.KeyEvent.*
@@ -61,6 +63,10 @@ class FullscreenActivity : Activity() {
         if (keyCode == KEYCODE_DPAD_RIGHT ) updateBackground(true)
         if (keyCode == KEYCODE_DPAD_LEFT ) updateBackground(false)
         if (keyCode == KEYCODE_DPAD_UP ) startBackgroundTimerSamba()
+        if (keyCode == KEYCODE_DPAD_DOWN) {
+            val i = Intent(this, SettingsActivity::class.java)
+            startActivity(i)
+        }
 
         return super.onKeyUp(keyCode, event)
     }
@@ -169,10 +175,12 @@ class FullscreenActivity : Activity() {
 
     private inner class UpdatePictureFileListTask () : TimerTask() {
         override fun run() {
-            val user = prefs!!.getString("User", "public")
-            val pass =prefs!!.getString("Password", "public")
-            val sharedFolder = prefs!!.getString("Folder", "photo")
-            val server = prefs!!.getString("Server", "192.168.0.2")
+            val prefsDefault = PreferenceManager.getDefaultSharedPreferences(applicationContext)
+            val server = prefsDefault!!.getString("pref_ip_addr","192.168.0.2")
+            val user = prefsDefault!!.getString("User", "public")
+            val pass =prefsDefault!!.getString("Password", "public")
+            val sharedFolder = prefsDefault!!.getString("pref_folder", "photo")
+
             val url = "smb://" + server + "/" + sharedFolder + "/"
             val auth = NtlmPasswordAuthentication(
                     null, user, pass)

@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<PreferenceScreen
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:title="@string/root_title">
+
+    <EditTextPreference
+        android:key="pref_ip_addr"
+        android:title="@string/title_edittext_address"
+        android:defaultValue="192.168.0.2"
+        android:summary="@string/summary_edittext_address"
+        />
+    <EditTextPreference
+        android:key="pref_folder"
+        android:title="Samba server folder"
+        android:defaultValue="photo"
+        />
+</PreferenceScreen>

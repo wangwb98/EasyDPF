@@ -4,4 +4,10 @@
     <string name="title_activity_fullscreen">EasyDPF</string>
     <string name="dummy_button">Dummy Button</string>
     <string name="dummy_content">DUMMY\nCONTENT</string>
+    <string name="root_title">Easy DPF settings</string>
+    <string name="title_basic_preference">This is the 2nd title</string>
+    <string name="summary_basic_preference">this is the 2nd summary</string>
+    <string name="title_edittext_address">Server IP address</string>
+    <string name="summary_edittext_address">The IP address of Samba server</string>
+    <string name="dialog_title_edittext_address">dialog title edit address</string>
 </resources>

@@ -1,10 +1,14 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
 
-    <style name="AppTheme" parent="@style/Theme.Leanback" />
+    <style name="AppTheme" parent="@style/Theme.Leanback">
+        <!-- item name="preferenceTheme">@style/PreferenceThemeOverlay.v14.Leanback</item-->
+        <item name="preferenceTheme">@style/PreferenceThemeOverlay</item>
+    </style>
 
-    <style name="FullscreenTheme" parent="AppTheme">
+    <style name="FullscreenTheme" parent="Theme.Leanback">
         <item name="android:actionBarStyle">@style/FullscreenActionBarStyle</item>
+        <item name="preferenceTheme">@style/PreferenceThemeOverlay.v14.Leanback</item>
         <item name="android:windowActionBarOverlay">true</item>
         <item name="android:windowBackground">@null</item>
         <item name="metaButtonBarStyle">?android:attr/buttonBarStyle</item>
@@ -13,5 +17,12 @@
 
     <style name="FullscreenActionBarStyle" parent="android:Widget.Holo.ActionBar">
         <item name="android:background">@color/black_overlay</item>
+    </style>
+
+    <style name="Theme.AppCompat.Light.NoActionBar" parent="AppTheme">
+        <item name="preferenceTheme">@style/PreferenceThemeOverlay.v14.Leanback</item>
+        <!-- <item name="preferenceTheme">@style/PreferenceThemeOverlay</item> -->
+        <item name="windowActionBar">false</item>
+        <item name="windowNoTitle">true</item>
     </style>
 </resources>
