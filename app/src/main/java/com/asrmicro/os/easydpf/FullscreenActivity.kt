@@ -177,9 +177,9 @@ class FullscreenActivity : Activity() {
         override fun run() {
             val prefsDefault = PreferenceManager.getDefaultSharedPreferences(applicationContext)
             val server = prefsDefault!!.getString("pref_ip_addr","192.168.0.2")
-            val user = prefsDefault!!.getString("User", "public")
-            val pass =prefsDefault!!.getString("Password", "public")
-            val sharedFolder = prefsDefault!!.getString("pref_folder", "photo")
+            val user = prefsDefault.getString("User", "public")
+            val pass =prefsDefault.getString("Password", "public")
+            val sharedFolder = prefsDefault.getString("pref_folder", "photo")
 
             val url = "smb://" + server + "/" + sharedFolder + "/"
             val auth = NtlmPasswordAuthentication(
@@ -236,7 +236,7 @@ class FullscreenActivity : Activity() {
             else mPicIndex--
         }
 
-        Glide.with(this)
+        GlideApp.with(this)
                 .load(file_list[mPicIndex])
                 .diskCacheStrategy(DiskCacheStrategy.ALL)
                 .error(R.drawable.ic_error_black_240dp)
@@ -253,7 +253,7 @@ class FullscreenActivity : Activity() {
             prefEditor.putInt("LastPictureIndex", mPicIndex)
             prefEditor.apply()
         }
-        Glide.with(this)
+        GlideApp.with(this)
                 .load(file_list[(mPicIndex+1)%file_list.size])
                 .downloadOnly(1920, 1080)
         startBackgroundTimer()

@@ -1,6 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:tools="http://schemas.android.com/tools"
     package="com.asrmicro.os.easydpf">
 
     <uses-feature
@@ -33,9 +32,6 @@
         <activity android:name=".SettingsActivity"
             android:theme="@style/FullscreenTheme">
         </activity>
-        <meta-data
-            android:name="com.asrmicro.os.easydpf.MyGlideModule"
-            android:value="GlideModule" />
     </application>
 
 </manifest>
