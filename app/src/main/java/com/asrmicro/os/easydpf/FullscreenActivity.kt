@@ -38,6 +38,8 @@ class FullscreenActivity : Activity() {
     private var mIndexing = false
 
     private var prefs : SharedPreferences? = null
+    private var prefsDefault : SharedPreferences? = null
+
 
     private var file_list : MutableList <String> = mutableListOf(
             "http://pic122.nipic.com/file/20170216/24421947_173534660000_2.jpg"
@@ -91,7 +93,8 @@ class FullscreenActivity : Activity() {
         actionBar?.setDisplayHomeAsUpEnabled(true)
 
         prefs = getSharedPreferences("config", Context.MODE_PRIVATE)
-        mPicIndex = prefs!!.getInt("LastPictureIndex", -1)
+        prefsDefault = PreferenceManager.getDefaultSharedPreferences(applicationContext)
+        mPicIndex = Integer.parseInt(prefsDefault!!.getString("stringPicIndex", "-1"))
         val gson = Gson()
         val pref_FileListStr = prefs?.getString("FileList", "")
         if (pref_FileListStr != "") {
@@ -175,11 +178,10 @@ class FullscreenActivity : Activity() {
 
     private inner class UpdatePictureFileListTask () : TimerTask() {
         override fun run() {
-            val prefsDefault = PreferenceManager.getDefaultSharedPreferences(applicationContext)
             val server = prefsDefault!!.getString("pref_ip_addr","192.168.0.2")
-            val user = prefsDefault.getString("User", "public")
-            val pass =prefsDefault.getString("Password", "public")
-            val sharedFolder = prefsDefault.getString("pref_folder", "photo")
+            val user = prefsDefault!!.getString("User", "public")
+            val pass =prefsDefault!!.getString("Password", "public")
+            val sharedFolder = prefsDefault!!.getString("pref_folder", "photo")
 
             val url = "smb://" + server + "/" + sharedFolder + "/"
             val auth = NtlmPasswordAuthentication(
@@ -228,16 +230,28 @@ class FullscreenActivity : Activity() {
     }
 
     @Synchronized private fun updateBackground(forward: Boolean) {
-        if (forward) {
-            mPicIndex = (mPicIndex + 1) % file_list.size
-        }
-        else {
-            if (mPicIndex < 1) mPicIndex = file_list.size - 1
-            else mPicIndex--
+        var currentFileName = ""
+        var nextFileName = ""
+
+        val prefEditor = prefsDefault?.edit()
+        if ( prefEditor!= null) {   // save the RecentPic Index.
+            mPicIndex = Integer.parseInt(prefsDefault!!.getString("stringPicIndex", "-1"))
+            if (forward) {
+                mPicIndex = (mPicIndex + 1) % file_list.size
+            }
+            else {
+                if (mPicIndex < 1) mPicIndex = file_list.size - 1
+                else mPicIndex--
+            }
+            currentFileName = file_list[mPicIndex]
+            nextFileName = file_list[(mPicIndex+1)%file_list.size]
+
+            prefEditor.putString("stringPicIndex", mPicIndex.toString())
+            prefEditor.apply()
         }
 
         GlideApp.with(this)
-                .load(file_list[mPicIndex])
+                .load(currentFileName)
                 .diskCacheStrategy(DiskCacheStrategy.ALL)
                 .error(R.drawable.ic_error_black_240dp)
                 //.centerCrop()
@@ -248,13 +262,8 @@ class FullscreenActivity : Activity() {
                 .into(fullscreen_content)
 
         pictureInfo.text = "${mPicIndex}/${file_list.size}\n${file_list[mPicIndex]}\n"
-        val prefEditor = prefs?.edit()
-        if ( prefEditor!= null) {   // save the RecentPic Index.
-            prefEditor.putInt("LastPictureIndex", mPicIndex)
-            prefEditor.apply()
-        }
         GlideApp.with(this)
-                .load(file_list[(mPicIndex+1)%file_list.size])
+                .load(nextFileName)
                 .downloadOnly(1920, 1080)
         startBackgroundTimer()
     }
