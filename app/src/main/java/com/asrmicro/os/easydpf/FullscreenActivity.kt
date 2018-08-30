@@ -66,6 +66,15 @@ class FullscreenActivity : Activity() {
         if (keyCode == KEYCODE_DPAD_LEFT ) updateBackground(false)
         if (keyCode == KEYCODE_DPAD_UP ) startBackgroundTimerSamba()
         if (keyCode == KEYCODE_DPAD_DOWN) {
+            /* why alert cannot work???
+            alert("Testing alerts") {
+                title("Alert")
+                yesButton { toast("Yess!!!") }
+                noButton { }
+            }.show()
+            */
+        }
+        if (keyCode == KEYCODE_MENU) {
             val i = Intent(this, SettingsActivity::class.java)
             startActivity(i)
         }
@@ -201,6 +210,7 @@ class FullscreenActivity : Activity() {
 
                 jcifs.Config.registerSmbURLHandler()
                 getFilesFromDir("smb://192.168.0.2/photo/", NtlmPasswordAuthentication.ANONYMOUS)
+                file_list.sort()
                 //var file_list = sfile.list()
 /*                for ( i in file_list )
                     Log.d(TAG, "file name:" + i)*/
