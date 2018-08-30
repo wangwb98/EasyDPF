@@ -159,6 +159,7 @@ class FullscreenActivity : Activity() {
     }
 
     private fun startBackgroundTimerSamba() {
+        Toast.makeText( applicationContext,"Start to add pictures!", Toast.LENGTH_LONG).show()
         if (mIndexing) {
             Log.d(TAG, "Previous index action not finished")
             Toast.makeText( applicationContext,"Previous index action not finished", Toast.LENGTH_LONG).show()
@@ -167,7 +168,7 @@ class FullscreenActivity : Activity() {
         mIndexing = true
         mBackgroundTimerSamba?.cancel()
         mBackgroundTimerSamba = Timer()
-        mBackgroundTimerSamba?.schedule(UpdatePictureFileListTask(), 5000)
+        mBackgroundTimerSamba?.schedule(UpdatePictureFileListTask(), 10)
     }
 
     private inner class UpdateBackgroundTask () : TimerTask() {
@@ -184,15 +185,25 @@ class FullscreenActivity : Activity() {
             val sharedFolder = prefsDefault!!.getString("pref_folder", "photo")
 
             val url = "smb://" + server + "/" + sharedFolder + "/"
-            val auth = NtlmPasswordAuthentication(
-                    null, user, pass)
+/*            val auth = NtlmPasswordAuthentication(
+                    null, user, pass)*/
 
             try{
+                file_list =  mutableListOf(
+                "http://pic122.nipic.com/file/20170216/24421947_173534660000_2.jpg")
+
+                val prefEditor = prefsDefault?.edit()
+                if ( prefEditor!= null) {   // save the RecentPic Index.
+                    mPicIndex = 0
+                    prefEditor.putString("stringPicIndex", mPicIndex.toString())
+                    prefEditor.apply()
+                }
+
                 jcifs.Config.registerSmbURLHandler()
                 getFilesFromDir("smb://192.168.0.2/photo/", NtlmPasswordAuthentication.ANONYMOUS)
                 //var file_list = sfile.list()
-                for ( i in file_list )
-                    Log.d(TAG, "file name:" + i)
+/*                for ( i in file_list )
+                    Log.d(TAG, "file name:" + i)*/
                 runOnUiThread { -> Toast.makeText(applicationContext, file_list.joinToString("\n", limit = 10, prefix = "File list\n"), Toast.LENGTH_LONG).show() }
             }catch(e:Exception){
                 Log.d(TAG, "exception: " + url + "Exception::" + e.toString())

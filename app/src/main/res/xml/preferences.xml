@@ -4,6 +4,13 @@
     android:title="@string/root_title">
 
     <EditTextPreference
+        android:key="stringPicIndex"
+        android:title="Slideshow picture index"
+        android:numeric="integer"
+        android:defaultValue="0"
+        />
+
+    <EditTextPreference
         android:key="pref_ip_addr"
         android:title="@string/title_edittext_address"
         android:defaultValue="192.168.0.2"
