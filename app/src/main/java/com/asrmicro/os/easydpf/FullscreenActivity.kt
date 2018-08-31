@@ -24,6 +24,10 @@ import java.util.*
 
 import jcifs.smb.NtlmPasswordAuthentication
 import jcifs.smb.SmbFile
+import org.jetbrains.anko.alert
+import org.jetbrains.anko.noButton
+import org.jetbrains.anko.toast
+import org.jetbrains.anko.yesButton
 
 
 /**
@@ -66,13 +70,11 @@ class FullscreenActivity : Activity() {
         if (keyCode == KEYCODE_DPAD_LEFT ) updateBackground(false)
         if (keyCode == KEYCODE_DPAD_UP ) startBackgroundTimerSamba()
         if (keyCode == KEYCODE_DPAD_DOWN) {
-            /* why alert cannot work???
             alert("Testing alerts") {
-                title("Alert")
-                yesButton { toast("Yess!!!") }
+                title = "Alert"
+                yesButton { toast("Yes")}
                 noButton { }
             }.show()
-            */
         }
         if (keyCode == KEYCODE_MENU) {
             val i = Intent(this, SettingsActivity::class.java)
