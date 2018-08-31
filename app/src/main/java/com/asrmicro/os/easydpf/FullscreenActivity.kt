@@ -40,7 +40,7 @@ class FullscreenActivity : Activity() {
     private var mBackgroundTimerSamba: Timer? = null
     private var serverFileCount = 0
     private var mIndexing = false
-
+    private var shortPress = false
     private var prefs : SharedPreferences? = null
     private var prefsDefault : SharedPreferences? = null
 
@@ -66,8 +66,18 @@ class FullscreenActivity : Activity() {
     }
 
     override fun onKeyUp(keyCode: Int, event: KeyEvent?): Boolean {
-        if (keyCode == KEYCODE_DPAD_RIGHT ) updateBackground(true)
-        if (keyCode == KEYCODE_DPAD_LEFT ) updateBackground(false)
+        if (keyCode == KEYCODE_DPAD_RIGHT ) {
+            if(shortPress)
+                updateBackground(true, 1)
+            shortPress = false
+            return true
+        }
+        if (keyCode == KEYCODE_DPAD_LEFT ) {
+            if(shortPress)
+                updateBackground(false, 1)
+            shortPress = false
+            return true
+        }
         if (keyCode == KEYCODE_DPAD_UP ) startBackgroundTimerSamba()
         if (keyCode == KEYCODE_DPAD_DOWN) {
             alert("Testing alerts") {
@@ -82,6 +92,31 @@ class FullscreenActivity : Activity() {
         }
 
         return super.onKeyUp(keyCode, event)
+    }
+
+    override fun onKeyDown(keyCode: Int, event: KeyEvent?): Boolean {
+        if (keyCode == KeyEvent.KEYCODE_DPAD_RIGHT || keyCode == KeyEvent.KEYCODE_DPAD_LEFT) {
+            if (event!!.action == KeyEvent.ACTION_DOWN) {
+                event.startTracking()
+                //Log.e(TAG, "hello peppa:"+event.repeatCount.toString())
+                if (event.repeatCount == 0)
+                    shortPress = true
+                else if (event.repeatCount % 10 == 0) {
+                    updateBackground(if (keyCode == KEYCODE_DPAD_RIGHT) true else false, 100)
+                }
+                return true
+            }
+        }
+        return super.onKeyDown(keyCode, event)
+    }
+    override fun onKeyLongPress(keyCode: Int, event: KeyEvent?): Boolean {
+        if (keyCode == KeyEvent.KEYCODE_DPAD_RIGHT || keyCode == KeyEvent.KEYCODE_DPAD_LEFT) {
+            shortPress = false
+            return true
+        }
+        //return super.onKeyLongPress(keyCode, event)
+        //Just return false because the super call does always the same (returning false)
+        return false
     }
 
     private val mHideRunnable = Runnable { hide() }
@@ -143,7 +178,7 @@ class FullscreenActivity : Activity() {
             prefEditor.commit()
         }
         */
-        updateBackground(true)
+        updateBackground(true, 1)
     }
 
     private fun hide() {
@@ -184,7 +219,7 @@ class FullscreenActivity : Activity() {
 
     private inner class UpdateBackgroundTask () : TimerTask() {
         override fun run() {
-            mHideHandler.post { updateBackground(true) }
+            mHideHandler.post { updateBackground(true, 1) }
         }
     }
 
@@ -252,7 +287,7 @@ class FullscreenActivity : Activity() {
         return results
     }
 
-    @Synchronized private fun updateBackground(forward: Boolean) {
+    @Synchronized private fun updateBackground(forward: Boolean,  offset: Int = 1) {
         var currentFileName = ""
         var nextFileName = ""
 
@@ -260,11 +295,11 @@ class FullscreenActivity : Activity() {
         if ( prefEditor!= null) {   // save the RecentPic Index.
             mPicIndex = Integer.parseInt(prefsDefault!!.getString("stringPicIndex", "-1"))
             if (forward) {
-                mPicIndex = (mPicIndex + 1) % file_list.size
+                mPicIndex = (mPicIndex + offset) % file_list.size
             }
             else {
-                if (mPicIndex < 1) mPicIndex = file_list.size - 1
-                else mPicIndex--
+                if (mPicIndex < offset) mPicIndex = file_list.size - 1
+                else mPicIndex-=offset
             }
             currentFileName = file_list[mPicIndex]
             nextFileName = file_list[(mPicIndex+1)%file_list.size]
