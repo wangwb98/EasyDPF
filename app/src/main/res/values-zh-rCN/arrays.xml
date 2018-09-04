@@ -1,4 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string-array name="sortType" />
+    <string-array name="sortType">
+        <item>按目录+文件名排序</item>
+        <item>按文件在服务器上创建时间排序</item>
+    </string-array>
+
 </resources>
