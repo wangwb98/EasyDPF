@@ -28,6 +28,8 @@ import org.jetbrains.anko.alert
 import org.jetbrains.anko.noButton
 import org.jetbrains.anko.toast
 import org.jetbrains.anko.yesButton
+import java.time.LocalDateTime
+import java.time.format.DateTimeFormatter
 
 
 /**
@@ -45,8 +47,8 @@ class FullscreenActivity : Activity(), SharedPreferences.OnSharedPreferenceChang
     private var prefsDefault : SharedPreferences? = null
 
 
-    private var file_list : MutableList <String> = mutableListOf(
-            "http://pic122.nipic.com/file/20170216/24421947_173534660000_2.jpg"
+    private var file_list : MutableList <Pair<String, Long>> = mutableListOf(
+            Pair("http://pic122.nipic.com/file/20170216/24421947_173534660000_2.jpg", 0L)
     )
 
     private val mHideHandler = Handler()
@@ -153,11 +155,11 @@ class FullscreenActivity : Activity(), SharedPreferences.OnSharedPreferenceChang
         mPicIndex = Integer.parseInt(prefsDefault!!.getString("stringPicIndex", "-1"))
         val gson = Gson()
         val pref_FileListStr = prefs?.getString("FileList", "")
-        if (pref_FileListStr != "") {
-            val mList: MutableList<String> = gson.fromJson<MutableList<String>>(pref_FileListStr, MutableList::class.java)
+/*        if (pref_FileListStr != "") {
+            val mList: MutableList<Pair<String, Long>> = gson.fromJson<MutableList<Pair<String, Long>>>(pref_FileListStr, MutableList::class.java)
             file_list.addAll(mList)
         }
-        else
+        else*/
             startBackgroundTimerSamba() // kick start the Samba file list refresh.
     }
 
@@ -247,7 +249,8 @@ class FullscreenActivity : Activity(), SharedPreferences.OnSharedPreferenceChang
 
             try{
                 file_list =  mutableListOf(
-                "http://pic122.nipic.com/file/20170216/24421947_173534660000_2.jpg")
+                    Pair("http://pic122.nipic.com/file/20170216/24421947_173534660000_2.jpg", 0L)
+                )
 
                 val prefEditor = prefsDefault?.edit()
                 if ( prefEditor!= null) {   // save the RecentPic Index.
@@ -258,7 +261,7 @@ class FullscreenActivity : Activity(), SharedPreferences.OnSharedPreferenceChang
 
                 jcifs.Config.registerSmbURLHandler()
                 getFilesFromDir("smb://192.168.0.2/photo/", NtlmPasswordAuthentication.ANONYMOUS)
-                file_list.sort()
+                file_list.sortBy { it.first }
                 //var file_list = sfile.list()
 /*                for ( i in file_list )
                     Log.d(TAG, "file name:" + i)*/
@@ -290,8 +293,8 @@ class FullscreenActivity : Activity(), SharedPreferences.OnSharedPreferenceChang
             serverFileCount ++
             if (file.isDirectory)
                 getFilesFromDir(file.path, auth)
-            else if (! file_list.contains(file.path) ){
-                file_list.add(file.path)
+            else if (! file_list.contains(Pair(file.path,0L)) ){
+                file_list.add(Pair(file.path, file.createTime()))
                 //Thread.sleep(500) // take a rest for 0.5s when we found one picture.
             }
         }
@@ -312,9 +315,10 @@ class FullscreenActivity : Activity(), SharedPreferences.OnSharedPreferenceChang
                 if (mPicIndex < offset) mPicIndex = file_list.size - 1
                 else mPicIndex-=offset
             }
-            currentFileName = file_list[mPicIndex]
-            nextFileName = file_list[(mPicIndex+1)%file_list.size]
+            currentFileName = file_list[mPicIndex].first
+            nextFileName = file_list[(mPicIndex+1)%file_list.size].first
 
+            //toast("${mPicIndex}, offset ${offset}, size ${file_list.size}, curre name ${currentFileName}")
             prefEditor.putString("stringPicIndex", mPicIndex.toString())
             prefEditor.apply()
         }
@@ -330,7 +334,7 @@ class FullscreenActivity : Activity(), SharedPreferences.OnSharedPreferenceChang
                 .placeholder(R.color.black_overlay)
                 .into(fullscreen_content)
 
-        pictureInfo.text = "${mPicIndex}/${file_list.size}\n${file_list[mPicIndex]}\n"
+        pictureInfo.text = "${mPicIndex}/${file_list.size}\n${file_list[mPicIndex].first}\n\n${Date(file_list[mPicIndex].second)}"
         GlideApp.with(this)
                 .load(nextFileName)
                 .downloadOnly(1920, 1080)
