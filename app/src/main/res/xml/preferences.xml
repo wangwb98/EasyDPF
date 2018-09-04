@@ -7,6 +7,7 @@
         android:key="stringPicIndex"
         android:title="Slideshow picture index"
         android:numeric="integer"
+        android:persistent="true"
         android:defaultValue="0"
         />
 
@@ -14,11 +15,20 @@
         android:key="pref_ip_addr"
         android:title="@string/title_edittext_address"
         android:defaultValue="192.168.0.2"
+        android:persistent="true"
         android:summary="@string/summary_edittext_address"
         />
     <EditTextPreference
         android:key="pref_folder"
         android:title="Samba server folder"
+        android:persistent="true"
         android:defaultValue="photo"
         />
+    <ListPreference
+        android:defaultValue="1"
+        android:entries="@array/sortType"
+        android:entryValues="@array/sortTypeCode"
+        android:key="@string/list_sortType"
+        android:persistent="true"
+        android:title="Pictures sorted by..." />
 </PreferenceScreen>

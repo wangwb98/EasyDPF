@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string-array name="sortType">
+        <item>File Name</item>
+        <item>File create time</item>
+    </string-array>
+    <string-array name="sortTypeCode">
+        <item>sort_filename</item>
+        <item>sort_file_create_time</item>
+    </string-array>
+</resources>

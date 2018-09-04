@@ -9,6 +9,7 @@ import android.app.Fragment
 import android.support.v7.preference.Preference
 import android.support.v7.preference.PreferenceScreen
 import android.widget.Toast
+import org.jetbrains.anko.toast
 
 class SettingsFragment : LeanbackSettingsFragment() {
     override fun onPreferenceStartInitialScreen() {

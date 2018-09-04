@@ -10,4 +10,5 @@
     <string name="title_edittext_address">Server IP address</string>
     <string name="summary_edittext_address">The IP address of Samba server</string>
     <string name="dialog_title_edittext_address">dialog title edit address</string>
+    <string name="list_sortType">list_sortType</string>
 </resources>

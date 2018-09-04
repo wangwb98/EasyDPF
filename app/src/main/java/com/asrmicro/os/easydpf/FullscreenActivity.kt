@@ -34,7 +34,7 @@ import org.jetbrains.anko.yesButton
  * An example full-screen activity that shows and hides the system UI (i.e.
  * status bar and navigation/system bar) with user interaction.
  */
-class FullscreenActivity : Activity() {
+class FullscreenActivity : Activity(), SharedPreferences.OnSharedPreferenceChangeListener {
     private var mPicIndex = -1
     private var mBackgroundTimer: Timer? = null
     private var mBackgroundTimerSamba: Timer? = null
@@ -80,6 +80,8 @@ class FullscreenActivity : Activity() {
         }
         if (keyCode == KEYCODE_DPAD_UP ) startBackgroundTimerSamba()
         if (keyCode == KEYCODE_DPAD_DOWN) {
+            val i = Intent(this, SettingsActivity::class.java)
+            startActivity(i)
             alert("Testing alerts") {
                 title = "Alert"
                 yesButton { toast("Yes")}
@@ -132,6 +134,13 @@ class FullscreenActivity : Activity() {
         false
     }
 
+    override fun onSharedPreferenceChanged(p0: SharedPreferences?, p1: String?) {
+        when (p1) {
+            getString(R.string.list_sortType) ->
+                if (prefsDefault!!.getString(p1, "test") == "sort_filename") toast("file name")
+                else toast("create time")
+        }
+    }
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
@@ -140,6 +149,7 @@ class FullscreenActivity : Activity() {
 
         prefs = getSharedPreferences("config", Context.MODE_PRIVATE)
         prefsDefault = PreferenceManager.getDefaultSharedPreferences(applicationContext)
+        prefsDefault!!.registerOnSharedPreferenceChangeListener(this)
         mPicIndex = Integer.parseInt(prefsDefault!!.getString("stringPicIndex", "-1"))
         val gson = Gson()
         val pref_FileListStr = prefs?.getString("FileList", "")
@@ -226,12 +236,13 @@ class FullscreenActivity : Activity() {
     private inner class UpdatePictureFileListTask () : TimerTask() {
         override fun run() {
             val server = prefsDefault!!.getString("pref_ip_addr","192.168.0.2")
-            val user = prefsDefault!!.getString("User", "public")
-            val pass =prefsDefault!!.getString("Password", "public")
             val sharedFolder = prefsDefault!!.getString("pref_folder", "photo")
 
             val url = "smb://" + server + "/" + sharedFolder + "/"
-/*            val auth = NtlmPasswordAuthentication(
+/*
+            val user = prefsDefault!!.getString("User", "public")
+            val pass =prefsDefault!!.getString("Password", "public")
+            val auth = NtlmPasswordAuthentication(
                     null, user, pass)*/
 
             try{
