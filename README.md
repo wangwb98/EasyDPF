@@ -20,10 +20,11 @@ Remote controler's DPAD can be used like:
 
 ## To do
 
-1. LEFT/RIGHT key long press should be able to do the quick jump in the picture list
-2. add a option to Clean Rescan of the NAS folder (means it will forget all the previous pictures and rescan)
+1. -LEFT/RIGHT key long press should be able to do the quick jump in the picture list- Done
+2. -add a option to Clean Rescan of the NAS folder (means it will forget all the previous pictures and rescan)- Done, use this as default behavior.
 3. Add a welcome screen to show how to use this app.
-4. add the options to sort pictures by time, by folder.
+4. add the options to sort pictures by time, by folder. Partially done, need to add EXIF time sort.
+5. add keypad_down to delete files(how?), keypad_up to rotate files.
 
 ## License
 
