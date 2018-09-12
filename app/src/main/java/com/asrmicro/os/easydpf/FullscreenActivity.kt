@@ -83,9 +83,21 @@ class FullscreenActivity : Activity(), SharedPreferences.OnSharedPreferenceChang
         }
         if (keyCode == KEYCODE_DPAD_UP ) startBackgroundTimerSamba()
         if (keyCode == KEYCODE_DPAD_DOWN) {
-            alert("Testing alerts") {
-                title = "Alert"
-                yesButton { toast("Yes")}
+            val picIdToDelete = mPicIndex
+            val currentPicName = file_list[picIdToDelete].first
+            alert("Do you want to delete ${currentPicName}") {
+                title = "Alert!"
+                yesButton {
+                    val fileToDelete = SmbFile(currentPicName, NtlmPasswordAuthentication.ANONYMOUS)
+                    val fileAfterDelete = SmbFile(currentPicName+".dpf", NtlmPasswordAuthentication.ANONYMOUS)
+                    /*double confirm the file list is still correct */
+                    if (file_list[picIdToDelete].first == currentPicName) {
+                        file_list.removeAt(picIdToDelete)
+                        fileToDelete.renameTo(fileAfterDelete)
+                        toast("File Deleted")
+                    }
+                    else {toast("Error! Cannot delete file because the database index changed at this moment.")}
+                }
                 noButton { }
             }.show()
         }
