@@ -25,10 +25,7 @@ import java.util.*
 
 import jcifs.smb.NtlmPasswordAuthentication
 import jcifs.smb.SmbFile
-import org.jetbrains.anko.alert
-import org.jetbrains.anko.noButton
-import org.jetbrains.anko.toast
-import org.jetbrains.anko.yesButton
+import org.jetbrains.anko.*
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 
@@ -85,21 +82,29 @@ class FullscreenActivity : Activity(), SharedPreferences.OnSharedPreferenceChang
         if (keyCode == KEYCODE_DPAD_DOWN) {
             val picIdToDelete = mPicIndex
             val currentPicName = file_list[picIdToDelete].first
-            alert("Do you want to delete ${currentPicName}") {
+/*            alert("Do you want to delete ${currentPicName}") {
                 title = "Alert!"
-                yesButton {
+                yesButton {*/
                     val fileToDelete = SmbFile(currentPicName, NtlmPasswordAuthentication.ANONYMOUS)
                     val fileAfterDelete = SmbFile(currentPicName+".dpf", NtlmPasswordAuthentication.ANONYMOUS)
-                    /*double confirm the file list is still correct */
-                    if (file_list[picIdToDelete].first == currentPicName) {
-                        file_list.removeAt(picIdToDelete)
-                        fileToDelete.renameTo(fileAfterDelete)
-                        toast("File Deleted")
+                    doAsync {
+                        /*double confirm the file list is still correct */
+                        if (file_list[picIdToDelete].first == currentPicName) {
+                            file_list.removeAt(picIdToDelete)
+                            fileToDelete.renameTo(fileAfterDelete)
+                            uiThread {
+                                updateBackground(false, 1)
+                                toast("File Deleted")
+                            }
+                        }
+                        else {
+                            uiThread {
+                                toast("Error! Cannot delete file because the database index changed at this moment.")
+                            } }
                     }
-                    else {toast("Error! Cannot delete file because the database index changed at this moment.")}
-                }
+/*                }
                 noButton { }
-            }.show()
+            }.show()*/
         }
         if (keyCode == KEYCODE_MENU) {
             val i = Intent(this, SettingsActivity::class.java)
