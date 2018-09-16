@@ -82,9 +82,9 @@ class FullscreenActivity : Activity(), SharedPreferences.OnSharedPreferenceChang
         if (keyCode == KEYCODE_DPAD_DOWN) {
             val picIdToDelete = mPicIndex
             val currentPicName = file_list[picIdToDelete].first
-/*            alert("Do you want to delete ${currentPicName}") {
+            alert("Do you want to delete ${currentPicName}") {
                 title = "Alert!"
-                yesButton {*/
+                yesButton {
                     val fileToDelete = SmbFile(currentPicName, NtlmPasswordAuthentication.ANONYMOUS)
                     val fileAfterDelete = SmbFile(currentPicName+".dpf", NtlmPasswordAuthentication.ANONYMOUS)
                     doAsync {
@@ -95,6 +95,12 @@ class FullscreenActivity : Activity(), SharedPreferences.OnSharedPreferenceChang
                             uiThread {
                                 updateBackground(false, 1)
                                 toast("File Deleted")
+
+                                val gson = Gson()
+                                val strFileList = gson.toJson(file_list)
+                                val prefEditor = prefs?.edit()
+                                prefEditor?.putString("FileList", strFileList)
+                                prefEditor?.apply()
                             }
                         }
                         else {
@@ -102,9 +108,9 @@ class FullscreenActivity : Activity(), SharedPreferences.OnSharedPreferenceChang
                                 toast("Error! Cannot delete file because the database index changed at this moment.")
                             } }
                     }
-/*                }
-                noButton { }
-            }.show()*/
+                }
+/*                noButton { }*/
+            }.show()
         }
         if (keyCode == KEYCODE_MENU) {
             val i = Intent(this, SettingsActivity::class.java)
@@ -154,9 +160,15 @@ class FullscreenActivity : Activity(), SharedPreferences.OnSharedPreferenceChang
 
     override fun onSharedPreferenceChanged(p0: SharedPreferences?, p1: String?) {
         when (p1) {
-            getString(R.string.list_sortType) ->
+            getString(R.string.list_sortType) -> {
                 if (prefsDefault!!.getString(p1, "sort_filename") == "sort_filename") file_list.sortBy { it.first }
-                else file_list.sortBy{it.second} //toast("create time")
+                else file_list.sortBy { it.second } //toast("create time")
+                val gson = Gson()
+                val strFileList = gson.toJson(file_list)
+                val prefEditor = prefs?.edit()
+                prefEditor?.putString("FileList", strFileList)
+                prefEditor?.apply()
+            }
         }
     }
     override fun onCreate(savedInstanceState: Bundle?) {
