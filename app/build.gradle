@@ -18,6 +18,12 @@ android {
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
         }
     }
+    android.applicationVariants.all {
+        variant ->
+            variant.outputs.all {
+                outputFileName = "${applicationId}_${variant.name}-V${variant.versionName}.apk"
+            }
+    }
 }
 
 dependencies {
